@@ -173,6 +173,28 @@ ruby.custom rt{color:#c0392b}
   .artist{font-size:13px}
 }
 .badge.b-clip{background:#fde2e1;color:#b42318}
+/* ---------- 我的音频库（私有 GitHub 仓库） ---------- */
+#lib{position:fixed;inset:0;z-index:60;background:rgba(60,40,30,.4);display:none;align-items:center;justify-content:center}
+#lib.show{display:flex}
+#lib .box{background:var(--card);width:min(96vw,560px);max-height:92vh;border-radius:18px;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden}
+#lib .ih{padding:14px 16px 10px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+#lib .ih b{font-size:19px;white-space:nowrap}
+#lib .ib{flex:1;overflow-y:auto;padding:10px 16px;font-size:14px;line-height:1.55}
+#lib .if{padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#lib label.fl{display:block;font-weight:600;margin:10px 0 4px}
+#lib input[type=text],#lib input[type=password]{width:100%;font-size:16px;padding:9px 10px;border:1.5px solid var(--accent2);border-radius:10px;font-family:inherit;background:#fff;color:var(--ink)}
+#lib .two{display:flex;gap:8px;align-items:center}
+#lib .two input{flex:1;min-width:0}
+#lib .acts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+#lib .acts .btn{font-size:14px;padding:7px 11px}
+#lib .st{margin:8px 0;padding:7px 10px;border-radius:10px;background:#f6efe6;color:#5a4a42}
+#lib .st.ok{background:#ecf7ee;color:#3c7a4a}#lib .st.err{background:#fbe9e4;color:#b0472a}
+#lib details{margin-top:10px;background:#fff8ef;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+#lib summary{cursor:pointer;font-weight:600}
+#lib ol{margin:6px 0 4px;padding-left:1.3em}
+#lib .warn{color:#b0472a;font-weight:600}
+#libBar{height:8px;background:#efe3d6;border-radius:6px;overflow:hidden;margin:6px 0}
+#libBar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
 </style>
 </head>
 <body>
@@ -231,7 +253,7 @@ ruby.custom rt{color:#c0392b}
     <div class="r"><b>歌单</b><span class="tip" id="cnt"></span><button class="btn x" id="closeList">关闭 ✕</button></div>
     <input id="q" type="search" placeholder="搜歌名、歌手、拼音（如 th）" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="legend"><span class="badge b-jp" style="margin-left:0">简谱</span> 有简谱　<span class="badge b-net">可直接播</span> 网易云能直接放　<span class="badge b-aud">有音频</span> 本机存了音频</div>
-    <div class="dtools"><label class="aopt"><input type="checkbox" id="onlyAud">只看有音频的歌</label><button class="btn" id="impBtn2">🎵 导入音乐</button><button class="btn" id="clearAud">清除已存音频</button></div>
+    <div class="dtools"><label class="aopt"><input type="checkbox" id="onlyAud">只看有音频的歌</label><button class="btn" id="impBtn2">🎵 导入音乐</button><button class="btn" id="clearAud">清除已存音频</button><button class="btn" id="libBtn">☁️ 我的音频库</button></div>
     <div id="stinfo"></div>
   </div>
   <ul id="list"></ul>
@@ -249,6 +271,38 @@ ruby.custom rt{color:#c0392b}
     <div id="impRep" hidden></div>
   </div>
   <div class="if"><span class="tip" id="impMsg"></span><button class="btn" id="impCancel">关闭</button><button class="btn on" id="impSave" hidden>保存到本机</button></div>
+</div></div>
+
+<div id="lib"><div class="box">
+  <div class="ih"><b>☁️ 我的音频库</b><span class="tip">从你自己的私有 GitHub 仓库直接放歌</span></div>
+  <div class="ib">
+    <div class="tip">设置好以后，打开一首这台设备上还没有音频的歌，会自动从你的私有仓库取这首歌（找“歌名.mp3”）来放，放过一次就存在这台设备上，下次秒开、不联网也能放。没设置的话，网页和原来完全一样。</div>
+    <label class="fl" for="libTok">访问码（GitHub 访问令牌）</label>
+    <div class="two"><input type="password" id="libTok" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="粘贴 github_pat_ 开头的访问码"><button class="btn" id="libEye" type="button">显示</button></div>
+    <label class="fl" for="libOwner">仓库（用户名 / 仓库名）</label>
+    <div class="two"><input type="text" id="libOwner" autocomplete="off" autocapitalize="off" spellcheck="false"><span>/</span><input type="text" id="libRepo" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="acts">
+      <button class="btn on" id="libSave">保存并测试</button>
+      <button class="btn" id="libClear">清除访问码</button>
+      <button class="btn" id="libAll">⬇️ 全部预先缓存</button>
+      <button class="btn" id="libStop" hidden>停止缓存</button>
+    </div>
+    <div id="libBar" hidden><i></i></div>
+    <div class="st" id="libSt"></div>
+    <div class="tip warn">⚠️ 访问码相当于你仓库的钥匙，不要发给别人，也不要在别人的手机/电脑上保存。它只存在这个浏览器里，只会发给 api.github.com。</div>
+    <details>
+      <summary>怎么生成访问码？（只需要做一次）</summary>
+      <ol>
+        <li>在电脑上登录 GitHub，打开 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">github.com/settings/personal-access-tokens/new</a></li>
+        <li>Token name 随便填，比如“拼音歌词”；Expiration（有效期）选一个期限，比如 90 天或 1 年，到期后再生成一个新的。</li>
+        <li>Repository access 选 <b>Only select repositories</b>，再选 <b>pinyin-geci-audio</b>。</li>
+        <li>Permissions → Repository permissions → <b>Contents</b> 选 <b>Read-only</b>（只读），其他都不用动。</li>
+        <li>点最下面的 Generate token，把 github_pat_ 开头的那串复制下来，粘贴到上面，点“保存并测试”。</li>
+      </ol>
+      <div class="tip">每台设备的浏览器要各粘贴一次。访问码丢了或怀疑被别人看到，就去 GitHub 的 Settings → Developer settings → Personal access tokens 里把它删掉，再生成一个新的。</div>
+    </details>
+  </div>
+  <div class="if"><button class="btn" id="libClose">关闭</button></div>
 </div></div>
 
 <div id="dlg"><div class="box">
@@ -404,7 +458,7 @@ function setMode(m){
   if (m !== 'file') fileA.pause();
   if (m !== 'manual') pauseTimer();
   if (m === 'net' && !netA.getAttribute('src')) netA.src = netURL();
-  if (m === 'file' && !fileA.getAttribute('src')) { if (AUDIO.has(SONG.id)) loadStored(loadSeq, false); else if (hasDir(SONG.id)) loadFolder(false); }
+  if (m === 'file' && !fileA.getAttribute('src')) { if (AUDIO.has(SONG.id)) loadStored(loadSeq, false); else if (hasDir(SONG.id)) loadFolder(false); else if (libOn() && libBusy !== loadSeq) loadLib(loadSeq, false); }
   tick(true);
 }
 document.querySelectorAll('#modes button').forEach(b => b.onclick = () => setMode(b.dataset.m));
@@ -497,6 +551,70 @@ async function storageInfo(){
 }
 async function askPersist(){ try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch(e) {} }
 
+// ---------- 我的音频库：从自己的私有 GitHub 仓库取歌（访问码只存在这个浏览器的 localStorage，只发给 api.github.com） ----------
+const LKEY = 'pinyin-lyrics-100-lib';
+let lib = {}; try { lib = JSON.parse(localStorage.getItem(LKEY) || '{}'); } catch(e) {}
+const LIB_DEF = { owner: 'wangshiyun404', repo: 'pinyin-geci-audio' };
+const saveLib = () => { try { localStorage.setItem(LKEY, JSON.stringify(lib)); } catch(e) {} };
+const libOn = () => !!lib.token;
+const okName = v => /^[A-Za-z0-9._-]+$/.test(v || '');
+function libApi(path){
+  const o = okName(lib.owner) ? lib.owner : LIB_DEF.owner, r = okName(lib.repo) ? lib.repo : LIB_DEF.repo;
+  return 'https://api.github.com/repos/' + o + '/' + r + path;
+}
+const libHeaders = raw => ({ 'Authorization': 'Bearer ' + lib.token, 'Accept': raw ? 'application/vnd.github.raw' : 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' });
+function libErr(status, ti){
+  if (status === 401) return '访问码无效或过期，请在“☁️ 我的音频库”里换一个新的。';
+  if (status === 404) return ti ? '仓库里没有这首（找的是“' + ti + '.mp3”）。也可能是访问码没有这个仓库的权限。' : '找不到这个仓库，或者访问码没有这个仓库的权限。';
+  if (status === 403 || status === 429) return '访问码没有读取权限，或者一小时内请求太多次了（GitHub 限制），过一会儿再试。';
+  return 'GitHub 出错了（' + status + '），过一会儿再试。';
+}
+const NETERR = '网络连不上 GitHub，可能需要开代理。';
+// 下载一首歌：成功返回 Blob，失败抛出带中文说明的错误
+async function libFetch(ti, onProg, signal){
+  let r;
+  try { r = await fetch(libApi('/contents/' + encodeURIComponent(ti + '.mp3') + '?ref=main'), { headers: libHeaders(true), cache: 'no-store', referrerPolicy: 'no-referrer', signal }); }
+  catch(e) { if (e.name === 'AbortError') throw e; const x = new Error(NETERR); x.net = true; throw x; }
+  if (!r.ok) { const x = new Error(libErr(r.status, ti)); x.status = r.status; throw x; }
+  const total = +r.headers.get('Content-Length') || 0;
+  let blob;
+  try {
+    if (r.body && r.body.getReader && onProg) {
+      const rd = r.body.getReader(), parts = []; let got = 0;
+      for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; onProg(got, total); }
+      blob = new Blob(parts, { type: 'audio/mpeg' });
+    } else blob = new Blob([await r.arrayBuffer()], { type: 'audio/mpeg' });
+  } catch(e) { if (e.name === 'AbortError') throw e; const x = new Error(NETERR); x.net = true; throw x; }
+  if (blob.size < 1000) throw new Error('从仓库拿到的文件不对（太小了），请检查仓库里的“' + ti + '.mp3”。');
+  return blob;
+}
+async function libCache(id, ti, blob){
+  const name = ti + '.mp3（我的音频库）';
+  await idbPut({ id, name, type: 'audio/mpeg', size: blob.size, blob, added: Date.now(), src: 'lib' });
+  AUDIO.add(id); ameta[id] = { name, size: blob.size, lib: 1 }; saveMeta();
+  updBadges(SONGS.findIndex(s => s.id === id));
+}
+let libBusy = 0;
+async function loadLib(seq, autoplay){
+  const s = SONG, id = s.id; libBusy = seq;
+  const tip = $('#fileTip');
+  tip.textContent = '☁️ 正在从我的音频库取《' + s.ti + '》……';
+  $('#delOne').hidden = true;
+  try {
+    const blob = await libFetch(s.ti, (got, total) => { if (seq === loadSeq) tip.textContent = '☁️ 正在从我的音频库取《' + s.ti + '》…… ' + (total ? Math.round(got * 100 / total) + '%' : MB(got)); });
+    try { await libCache(id, s.ti, blob); askPersist(); } catch(e) {}
+    if (seq !== loadSeq) return;
+    useBlob(blob, s.ti + '.mp3（我的音频库）', autoplay);
+    tip.textContent = '☁️ 我的音频库：' + s.ti + '.mp3' + (AUDIO.has(id) ? '（已存到本机，下次秒开）' : '');
+    if (autoplay && fileA.paused) fileA.play().catch(() => { tip.textContent += '（点 ▶ 开始播放）'; });
+  } catch(e) {
+    if (seq !== loadSeq) return;
+    const msg = '☁️ 我的音频库：' + e.message;
+    if (canNet(s)) { setMode('net'); netMsg.className = 'msg'; netMsg.textContent = msg + ' 先用网易云直接播放。'; if (autoplay) netA.play().catch(() => {}); }
+    else tip.textContent = msg + ' 也可以用“📁 选择音频文件”或“手动同步”。';
+  } finally { if (libBusy === seq) libBusy = 0; }
+}
+
 // ---------- 本地文件夹音频：网页旁边的 audio/<歌名>.mp3 ----------
 // 只检查生成网页时登记过的歌（audio-ids.txt），不会去扫整个文件夹
 const FOLDER = new Set(FOLDER_IDS);      // 应该有文件夹音频的歌
@@ -546,7 +664,7 @@ function useBlob(blob, name, autoplay){
 function loadStored(seq, autoplay){
   return idbGet(SONG.id).then(rec => {
     if (seq !== loadSeq) return;
-    if (!rec) { AUDIO.delete(SONG.id); delete ameta[SONG.id]; saveMeta(); updBadges(idx); if (hasDir(SONG.id)) loadFolder(autoplay); else setMode('manual'); return; }
+    if (!rec) { AUDIO.delete(SONG.id); delete ameta[SONG.id]; saveMeta(); updBadges(idx); if (hasDir(SONG.id)) loadFolder(autoplay); else if (libOn()) { setMode('file'); if (libBusy !== seq) loadLib(seq, autoplay); } else setMode('manual'); return; }
     useBlob(rec.blob, rec.name, autoplay);
   }).catch(e => { $('#fileTip').textContent = '读取本机音频失败：' + e.message; });
 }
@@ -567,7 +685,7 @@ fileA.addEventListener('error', () => {
     if (SONG.id !== id) return;
     fileA.removeAttribute('src'); fileA.load();
     $('#fileTip').textContent = '没找到 ' + folderURL(id) + '（或放不了）。请用“📁 选择音频文件”或“🎵 导入音乐”放你自己的歌。';
-    if (mode === 'file') { setMode('manual'); probeNet(loadSeq, false); }
+    if (mode === 'file') { if (libOn()) loadLib(loadSeq, false); else { setMode('manual'); probeNet(loadSeq, false); } }
     return;
   }
   $('#fileTip').textContent = '这个文件放不了，请换一个 mp3 或 m4a 文件试试。';
@@ -589,7 +707,7 @@ function onEnded(){
   if (!g.auto) return;
   for (let k = 1; k <= SONGS.length; k++) {
     const j = (idx + k) % SONGS.length;
-    if (hasAny(SONGS[j].id) || canNet(SONGS[j])) { loadSong(j, true); return; }
+    if (hasAny(SONGS[j].id) || libOn() || canNet(SONGS[j])) { loadSong(j, true); return; }
   }
 }
 fileA.addEventListener('ended', onEnded); netA.addEventListener('ended', onEnded);
@@ -639,9 +757,10 @@ function loadSong(i, autoplay){
   try { history.replaceState(null, '', '#' + SONG.id); } catch(e) {}
   last = -2; main.scrollTop = 0;
   $('#delOne').hidden = !AUDIO.has(SONG.id);
-  // 自动选播放方式：导入到本机的音频 > 本地 audio 文件夹 > 网易云（能放的话）> 手动同步
+  // 自动选播放方式：导入到本机的音频 > 本地 audio 文件夹 > 我的音频库（私有仓库）> 网易云（能放的话）> 手动同步
   if (AUDIO.has(SONG.id)) { setMode('file'); loadStored(seq, autoplay); }
   else if (hasDir(SONG.id)) { mode = 'file'; loadFolder(autoplay); setMode('file'); }
+  else if (libOn()) { mode = 'file'; loadLib(seq, autoplay); setMode('file'); }
   else if (SONG.net) { setMode('net'); if (autoplay) netA.play().catch(() => {}); }
   else setMode('manual');
   if (!hasDir(SONG.id) || AUDIO.has(SONG.id)) probeNet(seq, autoplay);
@@ -820,6 +939,79 @@ $('#impSave').onclick = async () => {
   if (seen.has(SONG.id)) loadSong(idx);
 };
 
+// ---------- 我的音频库：设置面板 ----------
+const libSt = (t, c) => { const e = $('#libSt'); e.textContent = t; e.className = 'st' + (c ? ' ' + c : ''); };
+function libShow(){
+  $('#libOwner').value = lib.owner || LIB_DEF.owner; $('#libRepo').value = lib.repo || LIB_DEF.repo;
+  $('#libTok').value = ''; $('#libTok').type = 'password'; $('#libEye').textContent = '显示';
+  $('#libTok').placeholder = libOn() ? '已保存访问码（已隐藏）。要换就粘贴新的' : '粘贴 github_pat_ 开头的访问码';
+  const n = Object.values(ameta).filter(m => m && m.lib).length;
+  if (!libAbort) libSt(libOn() ? '✅ 已设置。没有音频的歌会自动从“' + (lib.owner || LIB_DEF.owner) + '/' + (lib.repo || LIB_DEF.repo) + '”取。本机已缓存 ' + n + ' 首。' : '还没有设置访问码。', libOn() ? 'ok' : '');
+}
+function openLib(){ closeList(); $('#lib').classList.add('show'); libShow(); }
+$('#libBtn').onclick = openLib;
+$('#libClose').onclick = () => $('#lib').classList.remove('show');
+$('#lib').addEventListener('click', e => { if (e.target.id === 'lib') $('#lib').classList.remove('show'); });
+$('#libEye').onclick = () => { const t = $('#libTok'); t.type = t.type === 'password' ? 'text' : 'password'; $('#libEye').textContent = t.type === 'password' ? '显示' : '隐藏'; };
+$('#libSave').onclick = async () => {
+  const tok = $('#libTok').value.trim(), o = $('#libOwner').value.trim() || LIB_DEF.owner, r = $('#libRepo').value.trim() || LIB_DEF.repo;
+  if (!okName(o) || !okName(r)) { libSt('用户名或仓库名不对，只能有英文字母、数字、点、横线、下划线。', 'err'); return; }
+  if (tok && /\s/.test(tok)) { libSt('访问码里不能有空格或换行，请重新复制。', 'err'); return; }
+  if (!tok && !libOn()) { libSt('请先粘贴访问码。', 'err'); return; }
+  const old = { ...lib };
+  lib = { token: tok || lib.token, owner: o, repo: r };
+  libSt('正在测试……');
+  try {
+    const res = await fetch(libApi('/contents/?ref=main'), { headers: libHeaders(false), cache: 'no-store', referrerPolicy: 'no-referrer' });
+    if (!res.ok) { lib = old; libSt('❌ ' + libErr(res.status) + (tok ? '（没有保存这个访问码）' : ''), 'err'); return; }
+    const files = await res.json();
+    const have = new Set((Array.isArray(files) ? files : []).filter(f => /\.mp3$/i.test(f.name)).map(f => f.name.normalize('NFC')));
+    const hit = SONGS.filter(s => have.has((s.ti + '.mp3').normalize('NFC'))).length;
+    saveLib(); $('#libTok').value = ''; libShow();
+    libSt('✅ 连接成功！仓库里有 ' + have.size + ' 个 mp3，其中 ' + hit + ' 首能和歌单对上。现在打开没有音频的歌，会自动从这里取。', 'ok');
+    if (mode !== 'file' || !fileA.getAttribute('src')) { if (!AUDIO.has(SONG.id) && !FOLDER_OK.has(SONG.id)) loadSong(idx); }
+  } catch(e) { lib = old; libSt('❌ ' + NETERR + (tok ? '（没有保存这个访问码）' : ''), 'err'); }
+};
+$('#libClear').onclick = () => {
+  if (!libOn()) { libSt('这台设备上本来就没有保存访问码。'); return; }
+  if (!confirm('清除这台设备上保存的访问码？（已经缓存到本机的歌不受影响，可以在歌单里“清除已存音频”）')) return;
+  if (libAbort) libAbort.abort();
+  lib = { owner: lib.owner, repo: lib.repo }; saveLib(); libShow(); libSt('已清除访问码。');
+};
+let libAbort = null;
+$('#libAll').onclick = async () => {
+  if (!libOn()) { libSt('请先设置访问码。', 'err'); return; }
+  const todo = SONGS.filter(s => !AUDIO.has(s.id));
+  if (!todo.length) { libSt('✅ 100 首都已经存在这台设备上了。', 'ok'); return; }
+  if (!confirm('要把还没缓存的 ' + todo.length + ' 首歌都下载到这台设备上吗？大约需要 ' + Math.round(todo.length * 9.5) + ' MB 空间，建议连 Wi-Fi。')) return;
+  await askPersist();
+  libAbort = new AbortController(); const sig = libAbort.signal;
+  $('#libAll').hidden = true; $('#libStop').hidden = false; $('#libBar').hidden = false;
+  let ok = 0, fail = [], stop = '', k = 0;
+  const bar = $('#libBar i');
+  const show = (extra) => { bar.style.width = Math.round((ok + fail.length) * 100 / todo.length) + '%'; libSt('⬇️ 正在缓存 ' + (ok + fail.length) + ' / ' + todo.length + (fail.length ? '，失败 ' + fail.length : '') + (extra || '')); };
+  const worker = async () => {
+    while (!stop && k < todo.length) {
+      const s = todo[k++];
+      try { const b = await libFetch(s.ti, null, sig); await libCache(s.id, s.ti, b); ok++; }
+      catch(e) {
+        if (e.name === 'AbortError') { stop = stop || '已停止。'; break; }
+        if (e.status === 401 || e.net) { stop = e.message; libAbort.abort(); break; }
+        if (e.name === 'QuotaExceededError' || /quota/i.test(e.message)) { stop = '这台设备的浏览器空间不够了。'; libAbort.abort(); break; }
+        fail.push(s.ti);
+      }
+      show('（' + s.ti + '）');
+    }
+  };
+  show();
+  await Promise.all([worker(), worker()]);
+  libAbort = null; $('#libAll').hidden = false; $('#libStop').hidden = true; $('#libBar').hidden = true;
+  storageInfo();
+  const n = Object.values(ameta).filter(m => m && m.lib).length;
+  libSt((stop ? '⏹ ' + stop + ' ' : '✅ 完成。') + '这次缓存了 ' + ok + ' 首' + (fail.length ? '，' + fail.length + ' 首没成功：' + fail.slice(0, 8).join('、') + (fail.length > 8 ? '……' : '') : '') + '。本机现在一共有 ' + AUDIO.size + ' 首歌的音频（其中 ' + n + ' 首来自我的音频库）。', stop || fail.length ? 'err' : 'ok');
+};
+$('#libStop').onclick = () => { if (libAbort) libAbort.abort(); };
+
 // ---------- 点句跳转 / 改拼音 ----------
 let editing = false;
 $('#editBtn').onclick = () => { editing = !editing; document.body.classList.toggle('editing', editing); $('#editBtn').classList.toggle('on', editing); $('#editBtn').textContent = editing ? '改拼音：点字修改' : '改拼音'; };
@@ -898,7 +1090,7 @@ function tick(force){
 
 // 键盘：空格 开始/暂停，← → 上一首/下一首（翻页笔的 PageUp/PageDown 也行）
 document.addEventListener('keydown', e => {
-  if (dlg.classList.contains('show') || $('#imp').classList.contains('show') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (dlg.classList.contains('show') || $('#imp').classList.contains('show') || $('#lib').classList.contains('show') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (drawer.classList.contains('show')) { if (e.key === 'Escape') closeList(); return; }
   if (e.code === 'Space') { e.preventDefault(); if (mode === 'manual') $('#startBtn').click(); else { const a = mode === 'net' ? netA : fileA; if (a.getAttribute('src')) a.paused ? a.play().catch(()=>{}) : a.pause(); } }
   else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); loadSong(idx - 1, true); }
@@ -908,7 +1100,7 @@ document.addEventListener('keydown', e => {
 // 启动：网址里的 #歌曲ID > 上次的歌 > 第一首
 const want = +(location.hash.slice(1)) || g.last;
 let first = SONGS.findIndex(s => s.id === want); if (first < 0) first = 0;
-window.__pl = { startTimer, pauseTimer, setBase: v => { base = v; }, setMode, loadSong, openList, closeList, matchName, storageInfo, AUDIO, FOLDER_OK, FOLDER_BAD,
+window.__pl = { libOn, get libBusy(){ return libBusy; }, startTimer, pauseTimer, setBase: v => { base = v; }, setMode, loadSong, openList, closeList, matchName, storageInfo, AUDIO, FOLDER_OK, FOLDER_BAD,
   get idx(){ return idx; }, get song(){ return SONG; }, get mode(){ return mode; }, get aoff(){ return aoff; }, now: () => now(), get cur(){ return last; } };
 addEventListener('hashchange', () => { const id = +location.hash.slice(1), j = SONGS.findIndex(s => s.id === id); if (j >= 0 && j !== idx) loadSong(j, false); });
 // 先读出本机存了哪些歌的音频，再打开歌
